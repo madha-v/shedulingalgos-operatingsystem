@@ -365,3 +365,96 @@ int main() {
     
  
 }
+ // preemptivre priority sheduling with gants chart printing in output
+#include <stdio.h>
+#include <limits.h>
+
+int main() {
+    int n;
+    printf("Enter number of processes: ");
+    scanf("%d", &n);
+
+    int at[20], bt[20], rt[20], pr[20]; // arrival, burst, remaining, priority
+    int ct[20], tat[20], wt[20];
+    int completed = 0, time = 0;
+    float avgTAT = 0, avgWT = 0;
+
+    // To store Gantt Chart
+    int gcProcess[100], gcTime[100], gcIndex = 0;
+
+    // Input
+    for (int i = 0; i < n; i++) {
+        printf("\nEnter arrival time of P%d: ", i + 1);
+        scanf("%d", &at[i]);
+        printf("Enter burst time of P%d: ", i + 1);
+        scanf("%d", &bt[i]);
+        printf("Enter priority of P%d (lower value = higher priority): ", i + 1);
+        scanf("%d", &pr[i]);
+        rt[i] = bt[i]; // initially remaining = burst
+    }
+
+    // Until all processes are finished
+    while (completed != n) {
+        int idx = -1, minPr = INT_MAX;
+
+        // Select process with highest priority among arrived
+        for (int i = 0; i < n; i++) {
+            if (at[i] <= time && rt[i] > 0 && pr[i] < minPr) {
+                minPr = pr[i];
+                idx = i;
+            }
+        }
+
+        if (idx != -1) {
+            // Store Gantt Chart info only if it's a new process
+            if (gcIndex == 0 || gcProcess[gcIndex - 1] != idx + 1) {
+                gcProcess[gcIndex] = idx + 1;
+                gcTime[gcIndex] = time;
+                gcIndex++;
+            }
+
+            rt[idx]--; // run 1 unit of this process
+
+            if (rt[idx] == 0) { // finished
+                completed++;
+                ct[idx] = time + 1;
+                tat[idx] = ct[idx] - at[idx];
+                wt[idx] = tat[idx] - bt[idx];
+                avgTAT += tat[idx];
+                avgWT += wt[idx];
+            }
+        }
+        time++;
+    }
+
+    // Add final completion time in Gantt chart
+    gcTime[gcIndex] = time;
+
+    // Output Table
+    printf("\nPID\tAT\tBT\tPR\tCT\tTAT\tWT\n");
+    for (int i = 0; i < n; i++) {
+        printf("P%d\t%d\t%d\t%d\t%d\t%d\t%d\n",
+               i + 1, at[i], bt[i], pr[i], ct[i], tat[i], wt[i]);
+    }
+
+    printf("\nAverage Turnaround Time = %.2f", avgTAT / n);
+    printf("\nAverage Waiting Time = %.2f\n", avgWT / n);
+
+    // Print Gantt Chart
+    printf("\nGantt Chart:\n");
+
+    // Print process sequence
+    for (int i = 0; i < gcIndex; i++) {
+        printf("|  P%d  ", gcProcess[i]);
+    }
+    printf("|\n");
+
+    // Print timeline
+    for (int i = 0; i <= gcIndex; i++) {
+        printf("%d\t", gcTime[i]);
+    }
+    printf("\n");
+
+    return 0;
+}
+
